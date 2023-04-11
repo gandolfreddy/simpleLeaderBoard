@@ -2,12 +2,12 @@
 
 ## 使用方式
 
-1. 安裝 Node.js。
-2. 安裝 ngrok。
+1. 安裝 [Node.js](https://nodejs.org/en)。
+2. 安裝 [ngrok](https://ngrok.com/download)。
 3. 下載此專案。
-4. 在專案目錄下執行 `npm install`。
-5. 在專案目錄下執行 `npm run start`。
-6. 開啟終端機，執行 `ngrok http 3000`。
+4. 在專案目錄下終端機，執行 `npm install`。
+5. 在專案目錄下終端機，執行 `npm run start`。
+6. 另外開啟終端機，並切換至專案目錄下，並執行 `ngrok http 3000`。
 7. 複製 ngrok 產生的網址，貼到瀏覽器中，即可看到網頁（點數排行榜）。
 8. 複製 ngrok 產生的網址，後方加上 `/supervisor-admin`，貼到瀏覽器中，即可看到網頁（點數控制台）。
 
