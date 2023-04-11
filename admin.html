@@ -1,0 +1,277 @@
+<!--
+    Build a admin panel for the website
+ -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: monospace, "微軟正黑體";
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+            background-color: rgb(240, 240, 240);
+        }
+
+        #form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #input {
+            border-radius: 5px;
+            padding: 10px;
+            border: 1px solid rgb(73, 72, 72);
+            resize: none;
+            background-color: rgb(240, 240, 240);
+        }
+
+        #submit {
+            width: 100px;
+            height: 30px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: none;
+            background-color: rgb(50, 120, 177);
+            color: rgb(240, 240, 240);
+            cursor: pointer;
+        }
+
+        #submit:hover {
+            background-color: #554f4f;
+            color: rgb(240, 240, 240);
+        }
+
+        tbody tr {
+            height: 40px;
+        }
+
+        th {
+            border-radius: 5px;
+            background-color: #353232;
+            color: rgb(240, 240, 240);
+        }
+
+        td {
+            border-bottom: 1px solid #353232;
+        }
+
+        table {
+            width: 90%;
+        }
+
+        td {
+            text-align: center;
+        }
+
+        .p-name {
+            width: 40%;
+        }
+
+        .p-point {
+            width: 30%;
+        }
+
+        .p-btn {
+            width: 30%;
+        }
+
+        td.p-btn div {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        td.p-btn button {
+            width: 70px;
+            height: 30px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #add-point-group {
+            height: 30px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 10px;
+
+            background-color: #e63d00;
+            color: rgb(240, 240, 240);
+            font-weight: "bold";
+        }
+
+        #add-point-group:hover {
+            background-color: #fb5418;
+            color: rgb(240, 240, 240);
+        }
+
+        .p-btn-plus {
+            background-color: #046d07;
+            color: rgb(240, 240, 240);
+        }
+
+        .p-btn-plus:hover {
+            background-color: #0a8c0a;
+            color: rgb(240, 240, 240);
+        }
+
+        .p-btn-minus {
+            background-color: #a30000;
+            color: rgb(240, 240, 240);
+        }
+
+        .p-btn-minus:hover {
+            background-color: #c70000;
+            color: rgb(240, 240, 240);
+        }
+
+        .list-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+    </style>
+    <title>Admin Panel</title>
+</head>
+
+<body>
+    <h1>💻 點數控制台 💻</h1>
+    <h2>填入參加者名單</h2>
+    <form
+        id="form"
+        action=""
+    >
+        <textarea
+            id="input"
+            cols="50"
+            rows="10"
+            placeholder="請輸入名單"
+        ></textarea>
+        <button id="submit">送出名單</button>
+    </form>
+    <div class="list-container">
+        <h2>目前名單</h2>
+
+        <!-- 加入一按鈕，按下後即可將文字顏色為橘色的名單各加 10 分 -->
+        <button id="add-point-group">有回饋加 10 分</button>
+        <table>
+            <thead>
+                <tr>
+                    <th class="p-name">姓名</th>
+                    <th class="p-point">目前點數</th>
+                    <th class="p-btn">加減點數（10 分／次）</th>
+                </tr>
+            </thead>
+            <tbody id="list">
+                <!-- <tr>
+                    <td class="p-name">王大大</td>
+                    <td class="p-point">0</td>
+                    <td class="p-btn">
+                        <div>
+                            <button>+</button>
+                            <button>-</button>
+                        </div>
+                    </td>
+                </tr> -->
+            </tbody>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io();
+        let form = document.getElementById('form');
+        let list = document.getElementById('list');
+        let addPointGroupBtn = document.getElementById('add-point-group');
+
+        let players = [];
+
+
+        function updateCurrentList(playerList) {
+            list.innerHTML = "";
+            for (let i = 0; i < playerList.length; i++) {
+                let tr = document.createElement('tr');
+                let tdName = document.createElement('td');
+                let tdPoint = document.createElement('td');
+                let tdButton = document.createElement('td');
+                let tdButtonContainer = document.createElement('div');
+                let buttonPlus = document.createElement('button');
+                let buttonMinus = document.createElement('button');
+
+                tdName.innerHTML = `${playerList[i].emoji} ${playerList[i].name}`;
+                tdName.className = "p-name";
+                tdName.style.color = playerList[i].color;
+                tdName.style.fontWeight = "bold";
+                tdPoint.innerHTML = playerList[i].point;
+                tdPoint.className = "p-point";
+                tdButton.className = "p-btn";
+                buttonPlus.className = "p-btn-plus";
+                buttonMinus.className = "p-btn-minus";
+                buttonPlus.innerHTML = "+";
+                buttonMinus.innerHTML = "-";
+
+                buttonPlus.addEventListener('click', (e) => {
+                    socket.emit("player-point", {
+                        name: e.target.parentNode.parentNode.parentNode.children[0].innerHTML,
+                        point: 10
+                    });
+                });
+                buttonMinus.addEventListener('click', (e) => {
+                    socket.emit("player-point", {
+                        name: e.target.parentNode.parentNode.parentNode.children[0].innerHTML,
+                        point: -10
+                    });
+                });
+
+                tdButtonContainer.appendChild(buttonPlus);
+                tdButtonContainer.appendChild(buttonMinus);
+                tdButton.appendChild(tdButtonContainer);
+                tr.appendChild(tdName);
+                tr.appendChild(tdPoint);
+                tr.appendChild(tdButton);
+                list.appendChild(tr);
+            }
+        }
+
+
+        // 送出填入的名單
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            socket.emit("receive-player-list", document.getElementById('input').value);
+            document.getElementById('input').value = "";
+        });
+
+        // 有主動回饋的人都加 10 分
+        addPointGroupBtn.addEventListener('click', () => {
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].color === "rgb(255, 140, 0)") {
+                    players[i].color = 'rgb(69, 69, 69)';
+                    players[i].point += 10;
+                }
+            }
+            socket.emit("clicked-player-list", players);
+        });
+
+        // 接收已確認的名單
+        socket.on("player-list", (playerList) => {
+            players = playerList;
+            updateCurrentList(players);
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body,
+        #sortAscButton,
+        #sortDescButton {
+            font-family: consolas, "微軟正黑體", monospace;
+            padding-left: 10px;
+            padding-bottom: 50px;
+            background-color: rgb(240, 240, 240);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #d3chart {
+            width: 98%;
+        }
+
+        .chart text {
+            font: 20px monospace;
+            font-weight: bolder;
+        }
+
+        .chart text:nth-child(2) {
+            fill: rgb(69, 69, 69);
+            cursor: pointer;
+        }
+
+        .selected-name {
+            fill: darkOrange;
+        }
+
+    </style>
+    <title>Leaderboard</title>
+</head>
+
+<body>
+
+    <h1 class="title">🏆 點數排行榜 🏆</h1>
+    <div>
+        <svg
+            class="chart"
+            id="d3chart"
+        ></svg>
+    </div>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        let socket = io();
+        let OriPlayers = [];
+        let players = [];
+        let width = 500, barHeight = 30;
+
+
+        function onNameClick() {
+            const target = d3.select(this);
+            target.style(
+                'fill',
+                (target.style('fill') === 'rgb(69, 69, 69)')
+                    ? 'darkOrange'
+                    : 'rgb(69, 69, 69)'
+            );
+
+            for (let i = 0; i < players.length; i++) {
+                if (`${players[i].emoji} ${players[i].name}` === target.text()) {
+                    players[i].color = target.style('fill');
+                    break;
+                }
+            }
+
+            for (let i = 0; i < OriPlayers.length; i++) {
+                if (`${OriPlayers[i].emoji} ${OriPlayers[i].name}` === target.text()) {
+                    OriPlayers[i].color = target.style('fill');
+                    break;
+                }
+            }
+            socket.emit("clicked-player-list", OriPlayers);
+        }
+
+
+        function updateBarChart() {
+            let chart = d3.select("#d3chart");
+            let binding = chart.selectAll("g").data(players, d => d.name);
+
+            let enterG = binding.enter().append("g")
+            enterG.append("rect")
+                .attr("x", 120)
+                .attr("y", 1)
+                .attr("width", d => d.point * 2)
+                .attr("height", barHeight - 5)
+                .style('fill', 'steelblue')
+                .style('rx', 3);
+
+            enterG.append("text")
+                .attr("x", 3)
+                .attr("y", barHeight / 2 + 5)
+                .text(d => `${d.emoji} ${d.name}`)
+                .style('fill', d => d.color);
+
+            enterG.append("text")
+                .attr("x", 125)
+                .attr("y", barHeight / 2 + 5)
+                .style('fill', 'darkOrange')
+                .text(d => d.point);
+
+            binding.select("rect")
+                .transition()
+                .duration(500)
+                .attr("width", d => d.point * 2);
+
+            binding.select("text:nth-child(2)")
+                .transition()
+                .duration(2000)
+                .style('fill', d => d.color);
+
+            binding.select("text:nth-child(3)")
+                .transition()
+                .duration(500)
+                .attr("x", d => 125 + d.point * 2)
+                .text(d => d.point);
+
+            binding.transition()
+                .duration(1500)
+                .attr("transform", (d, i) => `translate(0, ${i * barHeight})`);
+
+            document.querySelectorAll("text:nth-child(2)")
+                .forEach((text) => { text.addEventListener("click", onNameClick); });
+        }
+
+
+        function sortAndUpdate(isAscending) {
+            players.sort((a, b) => (isAscending)
+                ? d3.ascending(a.point, b.point)
+                : d3.descending(a.point, b.point)
+            );
+
+            updateBarChart();
+        }
+
+
+        // run this code after page loads
+        window.addEventListener("DOMContentLoaded", () => {
+            // listen for new teachers status
+            socket.on("player-list", (playerList) => {
+                players = Array.from(playerList);
+                OriPlayers = Array.from(playerList);
+
+                d3.select("#d3chart")
+                    .attr("height", barHeight * players.length);
+                updateBarChart();
+                sortAndUpdate(false);
+            });
+        });
+
+    </script>
+</body>
+
+</html>
