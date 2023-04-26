@@ -148,6 +148,12 @@
             color: rgb(240, 240, 240);
         }
 
+        #random-pick:disabled {
+            background-color: rgb(134, 134, 134);
+            color: linen;
+            opacity: 0.8;
+        }
+
         .p-btn-plus {
             background-color: #046d07;
             color: rgb(240, 240, 240);
@@ -302,11 +308,15 @@
 
         // 隨機抽取 1 人
         randomPickBtn.addEventListener('click', () => {
+            randomPickBtn.innerText = " 隨機挑選中⏳ ";
+            randomPickBtn.setAttribute("disabled", "");
             socket.emit("pick-random-player", players);
         });
 
         // 接收已確認的名單
         socket.on("player-list", (playerList) => {
+            randomPickBtn.innerText = "隨機抽取 1 人";
+            randomPickBtn.removeAttribute("disabled");
             players = playerList;
             updateCurrentList(players);
         });
