@@ -58,17 +58,11 @@
         let OriPlayers = [];
         let players = [];
         let width = 500, barHeight = 30;
+        let pickingCounter = 0;
+        let randomPicking = false;
 
 
-        function onNameClick() {
-            const target = d3.select(this);
-            target.style(
-                'fill',
-                (target.style('fill') === 'rgb(69, 69, 69)')
-                    ? 'darkOrange'
-                    : 'rgb(69, 69, 69)'
-            );
-
+        function renewPlayerColors(target) {
             for (let i = 0; i < players.length; i++) {
                 if (`${players[i].emoji} ${players[i].name}` === target.text()) {
                     players[i].color = target.style('fill');
@@ -83,6 +77,20 @@
                 }
             }
             socket.emit("clicked-player-list", OriPlayers);
+        }
+
+        function onNameClick() {
+            if (!randomPicking) {
+                const target = d3.select(this);
+                target.style(
+                    'fill',
+                    (target.style('fill') === 'rgb(69, 69, 69)')
+                        ? 'darkOrange'
+                        : 'rgb(69, 69, 69)'
+                );
+
+                renewPlayerColors(target)
+            }
         }
 
 
@@ -132,7 +140,9 @@
                 .attr("transform", (d, i) => `translate(0, ${i * barHeight})`);
 
             document.querySelectorAll("text:nth-child(2)")
-                .forEach((text) => { text.addEventListener("click", onNameClick); });
+                .forEach((text) => {
+                    text.addEventListener("click", onNameClick);
+                });
         }
 
 
@@ -143,6 +153,53 @@
             );
 
             updateBarChart();
+        }
+
+
+        function getRGBCode() {
+            return [
+                Math.floor(Math.random() * 255),
+                Math.floor(Math.random() * 255),
+                Math.floor(Math.random() * 255),
+            ];
+        }
+
+
+        function randomColorEffect(playerList) {
+            const [r, g, b] = getRGBCode();
+            const randomIndex = Math.floor(Math.random() * playerList.length);
+
+            // 全部文字先變回黑色
+            d3.selectAll(`text:nth-child(2)`)
+                .transition()
+                .duration(50)
+                .style('fill', `rgb(69, 69, 69)`);
+            // 隨機選一個文字變色
+            d3.select(`g:nth-child(${randomIndex + 1}) > text:nth-child(2)`)
+                .transition()
+                .duration(50)
+                .style('fill', `rgb(${r}, ${g}, ${b})`);
+        }
+
+
+        function pickRandomPlayer(playerList, limit) {
+            const pickTimer = setInterval(() => {
+                randomColorEffect(playerList);
+                pickingCounter++;
+
+                if (pickingCounter === limit) {
+                    d3.selectAll(`text:nth-child(2)`).transition().duration(100).style('fill', `rgb(69, 69, 69)`);
+                    pickingCounter = 0;
+                    clearInterval(pickTimer);
+
+                    const randomIndex = Math.floor(Math.random() * playerList.length);
+                    const target = d3.select(`g:nth-child(${randomIndex + 1}) > text:nth-child(2)`);
+                    target.style('fill', `darkOrange`);
+                    setTimeout(() => { alert(`🎉 ${target.text()} 🎉`); }, 100);
+                    renewPlayerColors(target);
+                    randomPicking = false;
+                }
+            }, 100);
         }
 
 
@@ -157,6 +214,17 @@
                     .attr("height", barHeight * players.length);
                 updateBarChart();
                 sortAndUpdate(false);
+            });
+
+            // listen for picking a player
+            socket.on("pick-random-player", (playerList) => {
+                players = Array.from(playerList);
+                OriPlayers = Array.from(playerList);
+
+                randomPicking = true;
+                // 一輪隨機挑選 20~30 次
+                let randomCounterLimit = Math.floor(Math.random() * 10) + 20;
+                pickRandomPlayer(playerList, randomCounterLimit)
             });
         });
 

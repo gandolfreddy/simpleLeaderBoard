@@ -62,6 +62,11 @@ io.on('connection', (socket) => {
         playerList = players;
         io.emit("player-list", playerList);
     });
+
+    socket.on("pick-random-player", (players) => {
+        playerList = players;
+        io.emit("pick-random-player", playerList);
+    });
 });
 
 server.listen(3000, () => {

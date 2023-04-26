@@ -38,13 +38,13 @@
             border-radius: 5px;
             margin-top: 10px;
             border: none;
-            background-color: rgb(50, 120, 177);
+            background-color: #3278b1;
             color: rgb(240, 240, 240);
             cursor: pointer;
         }
 
         #submit:hover {
-            background-color: #554f4f;
+            background-color: #3a8cd0;
             color: rgb(240, 240, 240);
         }
 
@@ -95,6 +95,13 @@
             cursor: pointer;
         }
 
+        #btn-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
         #add-point-group {
             height: 30px;
             border-radius: 5px;
@@ -105,6 +112,7 @@
             justify-content: space-around;
             align-items: center;
             margin-bottom: 10px;
+            margin-right: 10px;
             padding: 0 10px;
 
             background-color: #e63d00;
@@ -114,6 +122,29 @@
 
         #add-point-group:hover {
             background-color: #fb5418;
+            color: rgb(240, 240, 240);
+        }
+
+        #random-pick {
+            height: 30px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            padding: 0 10px;
+
+            background-color: #058c11;
+            color: rgb(240, 240, 240);
+            font-weight: "bold";
+        }
+
+        #random-pick:hover {
+            background-color: #06b514;
             color: rgb(240, 240, 240);
         }
 
@@ -165,9 +196,12 @@
     </form>
     <div class="list-container">
         <h2>目前名單</h2>
-
-        <!-- 加入一按鈕，按下後即可將文字顏色為橘色的名單各加 10 分 -->
-        <button id="add-point-group">有回饋加 10 分</button>
+        <div id="btn-container">
+            <!-- 加入一按鈕，按下後即可將文字顏色為橘色的名單各加 10 分 -->
+            <button id="add-point-group">有回饋加 10 分</button>
+            <!-- 加入一按鈕，按下後可隨機抽取一人 -->
+            <button id="random-pick">隨機抽取 1 人</button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -196,6 +230,7 @@
         let form = document.getElementById('form');
         let list = document.getElementById('list');
         let addPointGroupBtn = document.getElementById('add-point-group');
+        let randomPickBtn = document.getElementById('random-pick');
 
         let players = [];
 
@@ -263,6 +298,11 @@
                 }
             }
             socket.emit("clicked-player-list", players);
+        });
+
+        // 隨機抽取 1 人
+        randomPickBtn.addEventListener('click', () => {
+            socket.emit("pick-random-player", players);
         });
 
         // 接收已確認的名單
