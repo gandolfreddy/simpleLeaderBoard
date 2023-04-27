@@ -63,9 +63,9 @@ io.on('connection', (socket) => {
         io.emit("player-list", playerList);
     });
 
-    socket.on("pick-random-player", (players) => {
-        playerList = players;
-        io.emit("pick-random-player", playerList);
+    socket.on("pick-random-player", (playerBundle) => {
+        playerList = playerBundle.players;
+        io.emit("pick-random-player", playerBundle);
     });
 });
 

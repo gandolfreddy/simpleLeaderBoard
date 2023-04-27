@@ -79,6 +79,7 @@
             socket.emit("clicked-player-list", OriPlayers);
         }
 
+
         function onNameClick() {
             if (!randomPicking) {
                 const target = d3.select(this);
@@ -182,7 +183,7 @@
         }
 
 
-        function pickRandomPlayer(playerList, limit) {
+        function pickRandomPlayer(playerList, randomPlayer, limit) {
             const pickTimer = setInterval(() => {
                 randomColorEffect(playerList);
                 pickingCounter++;
@@ -192,8 +193,8 @@
                     pickingCounter = 0;
                     clearInterval(pickTimer);
 
-                    const randomIndex = Math.floor(Math.random() * playerList.length);
-                    const target = d3.select(`g:nth-child(${randomIndex + 1}) > text:nth-child(2)`);
+                    const pickedIndex = playerList.findIndex((player) => player.name === randomPlayer.name);
+                    const target = d3.select(`g:nth-child(${pickedIndex + 1}) > text:nth-child(2)`);
                     target.style('fill', `darkOrange`);
                     setTimeout(() => { alert(`🎉 ${target.text()} 🎉`); }, 100);
                     renewPlayerColors(target);
@@ -217,14 +218,15 @@
             });
 
             // listen for picking a player
-            socket.on("pick-random-player", (playerList) => {
+            socket.on("pick-random-player", (playerBundle) => {
+                const [playerList, randomPlayer] = playerBundle;
                 players = Array.from(playerList);
                 OriPlayers = Array.from(playerList);
 
                 randomPicking = true;
-                // 一輪隨機挑選 20~30 次
+                // 隨機顯示挑選動畫 20~30 次
                 let randomCounterLimit = Math.floor(Math.random() * 10) + 20;
-                pickRandomPlayer(playerList, randomCounterLimit)
+                pickRandomPlayer(playerList, randomPlayer, randomCounterLimit)
             });
         });
 

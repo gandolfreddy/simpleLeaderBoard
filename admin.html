@@ -310,7 +310,9 @@
         randomPickBtn.addEventListener('click', () => {
             randomPickBtn.innerText = " 隨機挑選中⏳ ";
             randomPickBtn.setAttribute("disabled", "");
-            socket.emit("pick-random-player", players);
+            const randomIndex = Math.floor(Math.random() * players.length);
+            const randomPlayer = players[randomIndex];
+            socket.emit("pick-random-player", [players, randomPlayer]);
         });
 
         // 接收已確認的名單
