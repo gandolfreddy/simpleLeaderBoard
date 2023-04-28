@@ -288,6 +288,37 @@
         }
 
 
+        function modifyProbability(players) {
+            /*
+                調整隨機抽取的機率，規則為：
+                1. 以當下第一名的分數為基準，例如 110 分。
+                2. 其餘名次被抽中的機率，則以與第一名的分數差距為基準，例如第二名為 100 分，
+                   與第一名相差 1 個 10 分，那當下的機率池將被調整成 [第一名, 第二名, 第二名]。
+
+                default player:
+                {
+                    no: i,
+                    emoji: randomEmoji[i % randomEmoji.length],
+                    name: playerList[i],
+                    point: 0,
+                    color: 'rgb(69, 69, 69)',
+                };
+            */
+            let probabilityPool = [];
+            const playersCopy = [...players].sort((a, b) => b.point - a.point);
+            const first = playersCopy[0];
+
+            for (let i = 0; i < players.length; i++) {
+                const diffDegree = Math.floor((first.point - players[i].point) / 10) + 1;
+                for (let j = 0; j < diffDegree; j++) {
+                    probabilityPool.push(i);
+                }
+            }
+
+            return probabilityPool;
+        }
+
+
         // 送出填入的名單
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -310,7 +341,12 @@
         randomPickBtn.addEventListener('click', () => {
             randomPickBtn.innerText = " 隨機挑選中⏳ ";
             randomPickBtn.setAttribute("disabled", "");
-            const randomIndex = Math.floor(Math.random() * players.length);
+
+            // 回傳調整過機率的索引值名單
+            const modifiedP = modifyProbability(players);
+
+            const randomModifiedPIndex = Math.floor(Math.random() * modifiedP.length);
+            const randomIndex = modifiedP[randomModifiedPIndex];
             const randomPlayer = players[randomIndex];
             socket.emit("pick-random-player", [players, randomPlayer]);
         });
